@@ -1,0 +1,71 @@
+--- server/ModelLoader/BodyInfoCollada_impl.patched.cpp	2014-03-10 12:18:27.079001827 +0900
++++ server/ModelLoader/BodyInfoCollada_impl.cpp	2014-03-10 12:26:07.923105268 +0900
+@@ -43,6 +43,17 @@
+     os << quat[0] << " " << quat[1] << " " << quat[2] << " " << quat[3];
+ }
+ 
++#define printArrayWARN(name, ary) \
++  COLLADALOG_WARN(str(boost::format(name": %f\t%f\t%f\t%f")%ary[0]%ary[1]%ary[2]%ary[3])); \
++  COLLADALOG_WARN(str(boost::format(name": %f\t%f\t%f\t%f")%ary[4]%ary[5]%ary[6]%ary[7])); \
++  COLLADALOG_WARN(str(boost::format(name": %f\t%f\t%f\t%f")%ary[8]%ary[9]%ary[10]%ary[11]));
++#define printArrayDEBUG(name, ary) \
++  COLLADALOG_DEBUG(str(boost::format(name": %f\t%f\t%f\t%f")%ary[0]%ary[1]%ary[2]%ary[3])); \
++  COLLADALOG_DEBUG(str(boost::format(name": %f\t%f\t%f\t%f")%ary[4]%ary[5]%ary[6]%ary[7])); \
++  COLLADALOG_DEBUG(str(boost::format(name": %f\t%f\t%f\t%f")%ary[8]%ary[9]%ary[10]%ary[11]));
++
++#define printArray printArrayDEBUG
++
+ /// \brief The colladadom reader that fills in the BodyInfoCollada_impl class.
+ ///
+ /// It is separate from BodyInfoCollada_impl so that the colladadom resources do not have to remain allocated.
+@@ -467,6 +478,10 @@
+             COLLADALOG_WARN(str(boost::format("failed to find visual node for instance kinematics model %s")%ikm->getSid()));
+             return false;
+         }
++        //
++        PoseIdentity(pkinbody->visual_root);
++        getNodeParentTransform(pkinbody->visual_root, pvisualnode);
++        printArray("visual", pkinbody->visual_root);
+ 
+         if( pkinbody->name_.size() == 0 && !!ikm->getName() ) {
+             pkinbody->name_ = CORBA::string_dup(ikm->getName());
+@@ -562,6 +577,8 @@
+             domLinkRef pdomlink = ktec->getLink_array()[ilink];
+             DblArray12 tlocallink;
+             _ExtractFullTransform(tlocallink,pdomlink);
++            printArray("tlocallink", tlocallink);
++
+             int linkindex = ExtractLink(pkinbody, pdomlink, ilink == 0 ? pnode : domNodeRef(), tlocallink, tlocallink, vdomjoints, bindings);
+             // root link
+ 	    boost::shared_ptr<LinkInfo> plink = _veclinks.at(linkindex);
+@@ -782,12 +799,14 @@
+                     plink->inertia[8] = rigiddata->getInertia()->getValue()[2];
+                 }
+                 if( !!rigiddata->getMass_frame() ) {
+-                     DblArray12  tmass, ttemp1, ttemp2, tframe, tlocalmass;
++                     DblArray12  tmass, ttemp1, ttemp2, ttemp3, tframe, tlocalmass;
+ 		     // tmass uses tBaseLink frame
+ 		     _ExtractFullTransform(ttemp2, rigiddata->getMass_frame());
+ 		     PoseMult(tmass,tBaseLink,ttemp2);
+ 		     // convert to local frame
+-		     getNodeParentTransform(ttemp2,pdomnode);
++                     getNodeParentTransform(ttemp3,pdomnode);
++                     PoseInverse(ttemp1, pkinbody->visual_root);
++                     PoseMult(ttemp2, ttemp3, ttemp1);
+ 		     PoseMult(ttemp1,ttemp2,tParentLink);
+ 		     PoseInverse(tframe,ttemp1);
+ 		     PoseMult(tlocalmass,tframe,tmass);
+Index: BodyInfoCollada_impl.h
+===================================================================
+--- server/ModelLoader/BodyInfoCollada_impl.h	(リビジョン 2620)
++++ server/ModelLoader/BodyInfoCollada_impl.h	(作業コピー)
+@@ -84,6 +84,9 @@
+ 
+     static boost::mutex lock_;
+ 
++    // store visual root coordinates
++    DblArray12 visual_root;
++
+     friend class ColladaReader;
+ };
+ 
