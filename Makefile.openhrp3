@@ -14,7 +14,7 @@ SVN_PATCH = ${PATCH_DIR}/patch/OpenHRP2ModelFile.patch ${PATCH_DIR}/patch/FixIne
 # FixColladaModelLoaderSegmentNames.patch : https://openrtp.jp/redmine/issues/2169
 # CompileIdlPy.patch : https://openrtp.jp/redmine/issues/2170
 # Boost.patch cblas.patch :see https://openrtp.jp/redmine/issues/2172, https://github.com/start-jsk/openhrp3/issues/26
-# fixLinkRotation.patch
+# fixLinkRotation.patch :see https://openrtp.jp/redmine/issues/2173
 
 MK_DIR      = $(shell rospack find mk)
 NUM_OF_CPUS = $(shell grep -c '^processor' /proc/cpuinfo)
