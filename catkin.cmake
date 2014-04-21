@@ -9,6 +9,9 @@ find_package(catkin REQUIRED COMPONENTS mk rostest openrtm_aist)
 # <devel>/lib/<package>/bin/openrhrp-*
 # <devel>/lib/libhrp...
 # <src>/<package>/share
+if(NOT openhrp3_FOUND)
+  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/installed)
+endif()
 if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/installed)
 
   set(ENV{PATH} ${openrtm_aist_PREFIX}/lib/openrtm_aist/bin/:$ENV{PATH}) #update PATH for rtm-config
@@ -111,7 +114,7 @@ endforeach()
 foreach(_lib_file ${_lib_files})
   get_filename_component(_lib_file_path ${_lib_file} PATH)
   string(REPLACE "${CATKIN_DEVEL_PREFIX}/lib" "" _lib_file_path ${_lib_file_path})
-  install(FILES ${_lib_file} DESTINATION ${CATKIN_GLOBAL_LIB_DESTINATION}/${_lib_file_path})
+  install(PROGRAMS ${_lib_file} DESTINATION ${CATKIN_GLOBAL_LIB_DESTINATION}/${_lib_file_path})
 endforeach()
 ## done copy libs
 
